@@ -2,110 +2,56 @@ package model
 
 import (
 	"fmt"
-	"time"
+	"io"
 
-	"github.com/fitant/xbin-api/src/db"
-	"github.com/fitant/xbin-api/src/utils"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/fitant/xbin-api/src/storageprovider"
 )
 
+var ErrNotFound = storageprovider.ErrNotFound
+
 type SnippetController interface {
-	NewSnippet(name, snippet, language string, ephemeral bool) (*Snippet, error)
-	FindSnippet(name string) (*Snippet, error)
+	NewSnippet(snippet io.Reader, id string, ephemeral bool) error
+	FindSnippet(name string, eph bool) (*Snippet, error)
 }
 
 type Snippet struct {
-	ID        string
-	Ephemeral bool
-	Snippet   string
-	Language  string
+	ID      string
+	Snippet []byte
 }
 
 type mongoSnippetController struct {
-	db *db.MongoFindInsert
+	sp *storageprovider.S3Provider
 }
 
-func NewMongoSnippetController(db *db.MongoFindInsert) SnippetController {
+func NewMongoSnippetController(sp *storageprovider.S3Provider) SnippetController {
 	return &mongoSnippetController{
-		db: db,
+		sp: sp,
 	}
 }
 
-func (msc *mongoSnippetController) NewSnippet(id, snip, language string, ephemeral bool) (*Snippet, error) {
-	data := db.InsertSnippetQuery{
-		ID:        id,
-		Snippet:   snip,
-		Language:  language,
-		CreatedAt: time.Now().Unix(),
+func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, ephemeral bool) error {
+	if ephemeral {
+		id = fmt.Sprintf("ephemeral/%s", id)
 	}
-
-	doc, err := db.StructToBSON(data)
+	err := msc.sp.UploadSnippet(snippet, id)
 	if err != nil {
-		utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [NewSnippet] [toBSON]", err))
-		return nil, err
+		return err
 	}
+	return nil
+}
 
-	_, err = msc.db.InsertOne(doc, ephemeral)
+func (msc *mongoSnippetController) FindSnippet(id string, eph bool) (*Snippet, error) {
+	if eph {
+		id = fmt.Sprintf("ephemeral/%s", id)
+	}
+	data, err := msc.sp.DownloadSnippet(id)
 	if err != nil {
-		if err == db.ErrDuplicateKey {
-			return nil, err
-		}
-		utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [NewSnippet] [toBSON]", err))
 		return nil, err
 	}
 
 	// Create new Snippet and return
 	return &Snippet{
-		ID:        data.ID,
-		Snippet:   data.Snippet,
-		Language:  data.Language,
-		Ephemeral: ephemeral,
+		ID:      id,
+		Snippet: data,
 	}, nil
-}
-
-func (msc *mongoSnippetController) FindSnippet(id string) (*Snippet, error) {
-	rawQuery := db.FindSnippetQuery{
-		ID: id,
-	}
-
-	query, err := db.StructToBSON(rawQuery)
-	if err != nil {
-		utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [FindSnippet] [toBSON]", err))
-		return nil, err
-	}
-
-	ephemeral := false
-	res, err := msc.db.FindOne(query, ephemeral)
-	if err != nil && err != db.ErrNoDocuments {
-		utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [FindSnippet] [static] [toBSON]", err))
-		return nil, err
-	}
-
-	if err == db.ErrNoDocuments {
-		ephemeral = true
-		res, err = msc.db.FindOne(query, ephemeral)
-		if err != nil {
-			if err == db.ErrNoDocuments {
-				return nil, err
-			}
-			utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [FindSnippet] [ephemeral] [toBSON]", err))
-			return nil, err
-		}
-	}
-
-	if res == nil {
-		return nil, nil
-	}
-
-	raw, err := res.DecodeBytes()
-	if err != nil {
-		utils.Logger.Debug(fmt.Sprintf("%s : %v", "[Models] [MongoSnippetController] [FindSnippet] [DecodeBytes]", err))
-		return nil, err
-	}
-	var snippet Snippet
-	bson.Unmarshal(raw, &snippet)
-
-	snippet.Ephemeral = ephemeral
-	// Create new Snippet and return
-	return &snippet, nil
 }

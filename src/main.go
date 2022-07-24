@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/db"
 	"github.com/fitant/xbin-api/src/model"
 	"github.com/fitant/xbin-api/src/service"
+	"github.com/fitant/xbin-api/src/storageprovider"
 	"github.com/fitant/xbin-api/src/utils"
 	"github.com/fitant/xbin-api/src/view"
 	"github.com/fitant/xbin-api/src/view/http"
@@ -19,12 +19,10 @@ func main() {
 	config.Load()
 	utils.InitLogger(config.Cfg)
 
-	dbInstance, err := db.NewMongoStore(config.Cfg)
-	if err != nil {
-		panic(err)
-	}
 
-	sc := model.NewMongoSnippetController(dbInstance)
+	sp := storageprovider.InitS3StorageProvider()
+	
+	sc := model.NewMongoSnippetController(sp)
 	svc := service.NewSnippetService(sc, config.Cfg.Svc)
 
 	// Initialise and start serving webview

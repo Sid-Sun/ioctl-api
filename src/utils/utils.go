@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"io/ioutil"
 	"strings"
+	"compress/zlib"
 
-	"github.com/andybalholm/brotli"
 	"github.com/leonklingele/passphrase"
 )
 
@@ -20,18 +20,31 @@ func GenerateID(n int) string {
 	return strings.Join(idFields, "")
 }
 
-func DefalteBrotli(data []byte) []byte {
+func Defalte(data []byte) []byte {
 	var b bytes.Buffer
-	w := brotli.NewWriterLevel(&b, brotli.BestCompression)
-	w.Write(data)
-	w.Close()
+	w, err := zlib.NewWriterLevel(&b, 7)
+	if err != nil {
+		panic(err)
+	}
+	_, err = w.Write(data)
+	if err != nil {
+		panic(err)
+	}
+	err = w.Close()
+	if err != nil {
+		panic(err)
+	}
 	return b.Bytes()
 }
 
-func InflateBrotli(data []byte) []byte {
-	var b bytes.Reader
-	b.Read(data)
-	r := brotli.NewReader(bytes.NewReader(data))
-	x, _ := ioutil.ReadAll(r)
+func Inflate(data []byte) []byte {
+	r, err := zlib.NewReader(bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+	x, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
 	return x
 }

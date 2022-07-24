@@ -1,11 +1,13 @@
 package config
 
-import "github.com/fitant/xbin-api/src/types"
-
 type Crypto struct {
-	Salt           []byte
-	Cipher         types.CipherSelection
-	ARGON2Mem      uint32
-	ARGON2Rounds   uint32
-	ARGON2IDRounds uint32
+	Salt      []byte
+	ARGON2Key ARGON2Config
+	ARGON2ID  ARGON2Config
+}
+
+type ARGON2Config struct {
+	Parallelism uint8
+	Memory      uint32
+	Rounds      uint32
 }

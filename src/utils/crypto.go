@@ -5,11 +5,8 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
-	"runtime"
 
-	"github.com/Sid-Sun/seaturtle"
 	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/types"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -17,8 +14,12 @@ import (
 const hashLength = 32
 
 func HashID(id []byte) []byte {
-	gid := argon2.IDKey(id, config.Cfg.Crypto.Salt, config.Cfg.Crypto.ARGON2IDRounds, config.Cfg.Crypto.ARGON2Mem*1024, uint8(runtime.NumCPU()), hashLength)
-	return gid
+	return argon2.IDKey(id,
+		config.Cfg.Crypto.Salt,
+		config.Cfg.Crypto.ARGON2ID.Rounds,
+		config.Cfg.Crypto.ARGON2ID.Memory,
+		config.Cfg.Crypto.ARGON2ID.Parallelism,
+		hashLength)
 }
 
 func GenSalt() *[32]byte {
@@ -28,47 +29,34 @@ func GenSalt() *[32]byte {
 }
 
 func GenKey(key, salt []byte) []byte {
-	return argon2.IDKey(key, salt, config.Cfg.Crypto.ARGON2Rounds, config.Cfg.Crypto.ARGON2Mem*1024, uint8(runtime.NumCPU()), hashLength)
+	return argon2.IDKey(key, salt,
+		config.Cfg.Crypto.ARGON2Key.Rounds,
+		config.Cfg.Crypto.ARGON2Key.Memory,
+		config.Cfg.Crypto.ARGON2Key.Parallelism,
+		hashLength)
 }
 
-func getCipher(selection types.CipherSelection, key []byte) cipher.Block {
-	var c cipher.Block
-	switch selection {
-	case types.SeaTurtle:
-		c, _ = seaturtle.NewCipher(key)
-	default:
-		c, _ = aes.NewCipher(key)
-	}
-	return c
-}
-
-func Encrypt(data []byte, key []byte, salt *[32]byte) []byte {
+func Encrypt(data []byte, key []byte, salt *[32]byte) (ciphertext []byte, iv []byte, keysalt []byte) {
 	// Generate cipher
-	c := getCipher(config.Cfg.Crypto.Cipher, key)
+	c, _ := aes.NewCipher(key)
 
 	// use CFB to encrypt full data
-	data = cfbEncrypt(data, c)
+	ciphertext, iv = gcmEncrypt(data, c)
 
-	// Append salt to the end of data
-	data = append(data, salt[:]...)
-	return data
+	// prepend salt to the data
+	return ciphertext, iv, (*salt)[:]
 }
 
-func Decrypt(data []byte, key []byte) []byte {
-	// Read the salt from end of data
-	salt := data[len(data)-hashLength:]
-
+func Decrypt(data []byte, salt []byte, iv []byte, key []byte) []byte {
 	// Derive Key for decryption from ID using Argon2
 	key = GenKey(key, salt)
 
 	// Generate cipher
-	c := getCipher(config.Cfg.Crypto.Cipher, key)
+	c, _ := aes.NewCipher(key)
 
 	// Send IV and data bits to decrypt via CFB
-	data = cfbDecrypt(data[:len(data)-hashLength], c)
-
-	// data does not have salt
-	return data
+	// returned data does not have salt
+	return gcmDecrypt(data, iv, c)
 }
 
 func cfbEncrypt(data []byte, blockCipher cipher.Block) []byte {
@@ -86,12 +74,38 @@ func cfbEncrypt(data []byte, blockCipher cipher.Block) []byte {
 	return dst
 }
 
-func cfbDecrypt(data []byte, blockCipher cipher.Block) []byte {
+func gcmDecrypt(data []byte, nonce []byte, blockCipher cipher.Block) []byte {
 	// Create CFB Decrypter with cipher, instantiating with IV (first blockSize blocks of data)
-	cfb := cipher.NewCFBDecrypter(blockCipher, data[:blockCipher.BlockSize()])
+	gcm, err := cipher.NewGCMWithNonceSize(blockCipher, 32)
+	if err != nil {
+		panic(err)
+	}
 	// Create variable for storing decrypted note of shorter length taking into account IV
-	decrypted := make([]byte, len(data)-blockCipher.BlockSize())
-	// Decrypt data starting from blockSize to decrypted
-	cfb.XORKeyStream(decrypted, data[blockCipher.BlockSize():])
-	return decrypted
+	// decrypted := make([]byte, len(data)-gcm.NonceSize())
+	_, err = gcm.Open(data[:0], nonce, data, nil)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func gcmEncrypt(data []byte, blockCipher cipher.Block) (ciphertext []byte, nonce []byte) {
+	// Create CFB Decrypter with cipher, instantiating with IV (first blockSize blocks of data)
+	gcm, err := cipher.NewGCMWithNonceSize(blockCipher, 32)
+	if err != nil {
+		panic(err)
+	}
+
+	nonce = make([]byte, 32)
+	// Read random values from crypto/rand for CFB initialization vector
+	// Error can be safely ignored
+	io.ReadFull(rand.Reader, nonce)
+
+	ciphertext = gcm.Seal(data[:0], nonce, data, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// prepend generated nonce to data
+	return ciphertext, nonce
 }

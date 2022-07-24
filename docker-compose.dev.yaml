@@ -1,8 +1,0 @@
-version: '3.7'
-
-services:
-    db:
-        image: mongo:5
-        env_file: dev.env
-        ports:
-        -   27017:27017

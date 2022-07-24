@@ -1,16 +1,22 @@
 package contract
 
+import "encoding/json"
+
 type CreateSnippet struct {
 	Metadata Metadata `json:"metadata"`
-	Data     Data     `json:"data"`
+	Data     string   `json:"data"`
+}
+
+type CreateE2ESnippet struct {
+	Version    string          `json:"version"`
+	Ephemeral  bool            `json:"ephemeral"`
+	Keysalt    json.RawMessage `json:"keysalt"`
+	Initvector json.RawMessage `json:"initvector"`
+	Ciphertext json.RawMessage `json:"ciphertext"`
 }
 
 type CreateSnippetResponse struct {
 	URL string
-}
-
-type Data struct {
-	Snippet string `json:"snippet"`
 }
 
 type Metadata struct {
@@ -19,3 +25,4 @@ type Metadata struct {
 }
 
 var CS CreateSnippet
+

@@ -16,6 +16,13 @@ func (h *HTTPServerConfig) GetListenAddr() string {
 }
 
 func (h *HTTPServerConfig) GetBaseURL() string {
+	if h.Enpoint == "/" {
+		switch h.returnFormat {
+		case "json":
+			return fmt.Sprintf("%s/%%s", h.baseURL)
+		}
+		return fmt.Sprintf("%s/r/%%s", h.baseURL)
+	}
 	switch h.returnFormat {
 	case "json":
 		return fmt.Sprintf("%s%s/%%s", h.baseURL, h.Enpoint)
