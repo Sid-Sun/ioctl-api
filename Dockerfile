@@ -11,7 +11,6 @@ RUN make compile
 
 FROM alpine
 WORKDIR /root/app
-COPY migrations migrations
 RUN apk add libc6-compat --no-cache
 COPY --from=build /build/out .
 
