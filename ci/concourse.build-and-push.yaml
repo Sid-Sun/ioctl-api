@@ -1,15 +1,15 @@
 resources:
-  - name: snippets-source
+  - name: ioctl-api-source
     type: git
     source:
-      uri: git@github.com:fitant/snippets-api.git
+      uri: git@github.com:Sid-Sun/ioctl-api.git
       branch: main
       private_key: ((repo_privkey))
-  - name: snippets-image
+  - name: ioctl-api-image
     type: registry-image
     icon: docker
     source:
-      repository: ((registry_url))/((image_repo))/snippets-api
+      repository: ((registry_url))/((image_repo))/ioctl-api
       tag: latest
       username: ((registry_username))
       password: ((registry_password))
@@ -17,7 +17,7 @@ resources:
 jobs:
   - name: build-and-push
     plan:
-      - get: snippets-source
+      - get: ioctl-api-source
         trigger: true
       - task: build-image
         privileged: true
@@ -29,11 +29,11 @@ jobs:
               repository: concourse/oci-build-task
               tag: master
           inputs:
-            - name: snippets-source
+            - name: ioctl-api-source
           outputs:
             - name: image
           params:
-            CONTEXT: snippets-source
+            CONTEXT: ioctl-api-source
           run:
             path: build
       - task: tag-image
@@ -44,15 +44,15 @@ jobs:
             source:
               repository: alpine/git
           inputs:
-            - name: snippets-source
+            - name: ioctl-api-source
           outputs:
             - name: tags
           run:
             path: sh
             args:
               - -c
-              - cd snippets-source; git rev-parse --short HEAD > ../tags/tags
-      - put: snippets-image
+              - cd ioctl-api-source; git rev-parse --short HEAD > ../tags/tags
+      - put: ioctl-api-image
         params:
           image: image/image.tar
           additional_tags: tags/tags
