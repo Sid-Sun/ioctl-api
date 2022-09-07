@@ -1,6 +1,8 @@
-## Snippets API
+## i/o/ctl
 ---
-Try out Snippets here: https://bin.dronk.dev
+An E2E Encrypted Pastebin App
+
+Try out here: https://bin.dronk.dev
 
 Or, if you prefer, use the API directly: https://api.bin.dronk.dev
 
@@ -36,7 +38,7 @@ i/o/ctl is awesome!
 
 ### Quick Start:
 ***Prerequisites: AWS S3, Docker, Docker Compose and curl***
-- `git clone --depth=1 https://github.com/fitant/snippets-api`
+- `git clone --depth=1 https://github.com/sid-sun/ioctl-api`
 - `cd snippets-api`
 - edit quickstart.env and add your AWS S3 details (currently tied to AWS)
 - `docker compose up -d`
@@ -48,7 +50,7 @@ i/o/ctl is awesome!
 - `docker compose down`
 
 ### Setup for Development:
-- `git clone --depth=1 https://github.com/fitant/snippets-api`
+- `git clone --depth=1 https://github.com/sid-sun/ioctl-api`
 - `cd snippets-api`
 - `go mod download`
 - edit dev.env and add your AWS S3 details (currently tied to AWS)
