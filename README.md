@@ -1,19 +1,19 @@
 ## Snippets API
 ---
-Try out Snippets hosted by Fitant here: https://ioctl.ml
+Try out Snippets here: https://bin.dronk.dev
 
-Or, if you prefer, use the API directly: https://api.ioctl.ml
+Or, if you prefer, use the API directly: https://api.bin.dronk.dev
 
 ```
 > echo "Hello, World!" > hello-world.txt 
 
 > # just use curl --upload-file
 
-> curl --upload-file hello-world.txt https://api.ioctl.ml
+> curl --upload-file hello-world.txt https://api.bin.dronk.dev
 
-{"URL":"https://api.ioctl.ml/r/EmbossChemicals"}
+{"URL":"https://api.bin.dronk.dev/r/EmbossChemicals"}
 
-> curl https://api.ioctl.ml/r/EmbossChemicals
+> curl https://api.bin.dronk.dev/r/EmbossChemicals
 Hello, World!
 
 > echo "i/o/ctl is awesome!"
