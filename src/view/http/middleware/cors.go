@@ -13,7 +13,7 @@ func WithCors(cfg *config.HTTPServerConfig) func(h http.Handler) http.Handler {
 	handler := cors.New(cors.Options{
 		AllowedOrigins: urls,
 		AllowedMethods: []string{"GET", "POST", "PUT", "OPTIONS"},
-		AllowedHeaders: []string{"Origin", "X-Requested-With", "Content-Type", "Accept"},
+		AllowedHeaders: []string{"Origin", "X-Requested-With", "Content-Type", "Accept", "Ephemeral"},
 		MaxAge:         30 * 60, // 30 mins of preflight caching
 	}).Handler
 

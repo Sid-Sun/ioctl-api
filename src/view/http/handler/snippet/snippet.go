@@ -1,11 +1,10 @@
 package snippet
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/fitant/xbin-api/config"
 	"github.com/fitant/xbin-api/src/service"
@@ -18,15 +17,15 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 	return func(w http.ResponseWriter, req *http.Request) {
 		snippetID := chi.URLParam(req, "snippetID")
 
-		data, _ := ioutil.ReadAll(req.Body)
-		s := new(contract.CreateE2ESnippet)
-		err := json.Unmarshal(data, &s)
-		if err != nil || s.Version != "v1" {
+		ephHeader := req.Header.Get("Ephemeral")
+		eph, err := strconv.ParseBool(ephHeader)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
-		err = svc.CreateE2ESnippet(bytes.NewReader(data), snippetID, s.Ephemeral)
+		err = svc.CreateE2ESnippet(req.Body, snippetID, eph)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
