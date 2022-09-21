@@ -11,6 +11,7 @@ import (
 var encryptionKeysEphemeral chan types.EncryptionStack
 var encryptionKeys chan types.EncryptionStack
 var mut *sync.Mutex
+
 func populateEncryptionStack(idSize int) {
 	mut = new(sync.Mutex)
 	go populateChan(idSize, encryptionKeysEphemeral)
@@ -27,7 +28,7 @@ func populateChan(idSize int, c chan types.EncryptionStack) {
 		id := []byte(x.ID)
 		x.Hash = hex.EncodeToString(utils.HashID(id))
 		x.Key = utils.GenKey(id, x.Salt[:])
-		c <- x
 		mut.Unlock()
+		c <- x
 	}
 }
