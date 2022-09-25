@@ -36,7 +36,16 @@ func InitS3StorageProvider() *S3Provider {
 }
 
 func (sp *S3Provider) UploadSnippet(data io.Reader, id string) error {
-	_, err := sp.uploader.Upload(&s3manager.UploadInput{
+	_, err := sp.GetObjectInfo(id)
+	if err != nil && err != ErrNotFound {
+		return err
+	}
+
+	if err != ErrNotFound {
+		return ErrAlreadyExists
+	}
+
+	_, err = sp.uploader.Upload(&s3manager.UploadInput{
 		Key:    &id,
 		Body:   data,
 		Bucket: &sp.bucketname,
@@ -48,7 +57,7 @@ func (sp *S3Provider) UploadSnippet(data io.Reader, id string) error {
 	return nil
 }
 
-func (sp *S3Provider) DownloadSnippet(id string) (data []byte, err error) {
+func (sp *S3Provider) GetObjectInfo(id string) (*s3.HeadObjectOutput, error) {
 	objhead, err := sp.service.HeadObject(&s3.HeadObjectInput{
 		Bucket: &sp.bucketname,
 		Key:    &id,
@@ -62,6 +71,14 @@ func (sp *S3Provider) DownloadSnippet(id string) (data []byte, err error) {
 				return nil, err
 			}
 		}
+		return nil, err
+	}
+	return objhead, nil
+}
+
+func (sp *S3Provider) DownloadSnippet(id string) (data []byte, err error) {
+	objhead, err := sp.GetObjectInfo(id)
+	if err != nil {
 		return nil, err
 	}
 

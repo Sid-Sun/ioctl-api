@@ -8,6 +8,7 @@ import (
 )
 
 var ErrNotFound = storageprovider.ErrNotFound
+var ErrAlreadyExists = storageprovider.ErrAlreadyExists
 
 type SnippetController interface {
 	NewSnippet(snippet io.Reader, id string, ephemeral bool) error

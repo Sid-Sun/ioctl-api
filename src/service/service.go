@@ -16,6 +16,7 @@ import (
 )
 
 var ErrNotFound = model.ErrNotFound
+var ErrAlreadyExists = model.ErrAlreadyExists
 
 type Service interface {
 	CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error)
@@ -79,7 +80,9 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error {
 	err := s.sc.NewSnippet(snippet, snippetID, eph)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
+		if err != model.ErrAlreadyExists {
+			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
+		}
 		return err
 	}
 	return nil

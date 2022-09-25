@@ -27,6 +27,11 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 
 		err = svc.CreateE2ESnippet(req.Body, snippetID, eph)
 		if err != nil {
+			if err == service.ErrAlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte(err.Error()))
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
@@ -42,7 +47,6 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 	}
 }
 
-// TODO: REDO
 func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		data := req.Context().Value(contract.CS).(contract.CreateSnippet)
@@ -58,6 +62,7 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 		snippetID, err := svc.CreateSnippet(snippet, data.Metadata.Ephemeral)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -80,9 +85,11 @@ func Get(svc service.Service, responseType string) http.HandlerFunc {
 		if err != nil {
 			if err == service.ErrNotFound {
 				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(err.Error()))
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 			return
 		}
 
