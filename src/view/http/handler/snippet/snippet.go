@@ -54,9 +54,8 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 				"language":  data.Metadata.Language,
 			},
 		}
-		raw, _ := json.Marshal(snippet)
 
-		snippetID, err := svc.CreateSnippet(raw, data.Metadata.Ephemeral)
+		snippetID, err := svc.CreateSnippet(snippet, data.Metadata.Ephemeral)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -66,7 +65,7 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
 		}
 
-		raw, _ = json.Marshal(resp)
+		raw, _ := json.Marshal(resp)
 		req.Header.Add("Content-Type", "application/json")
 		w.Write(raw)
 	}

@@ -18,7 +18,7 @@ import (
 var ErrNotFound = model.ErrNotFound
 
 type Service interface {
-	CreateSnippet(snippet []byte, ephemeral bool) (string, error)
+	CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error)
 	CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error
 	FetchSnippet(id string) (*model.Snippet, error)
 }
@@ -38,7 +38,7 @@ func NewSnippetService(sc model.SnippetController, cfg config.Service) Service {
 	}
 }
 
-func (s *serviceImpl) CreateSnippet(snippet []byte, ephemeral bool) (string, error) {
+func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error) {
 	var keys types.EncryptionStack
 	switch ephemeral {
 	case true:
@@ -47,8 +47,11 @@ func (s *serviceImpl) CreateSnippet(snippet []byte, ephemeral bool) (string, err
 		keys = <-encryptionKeys
 	}
 
+	snippet.Metadata["id"] = keys.ID
+	rawSnippet, _ := json.Marshal(snippet)
+
 	// Deflate snippet -> Encrypt snippet -> encode snippet
-	compressedSnippet := utils.Defalte(snippet)
+	compressedSnippet := utils.Defalte(rawSnippet)
 	encryptedSnippet, iv, keysalt := utils.Encrypt(compressedSnippet, keys.Key, keys.Salt)
 	snippetSpec := types.SnippetSpec{
 		Version:    "v1",
