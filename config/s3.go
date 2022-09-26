@@ -1,5 +1,6 @@
 package config
 
 type S3 struct {
-	Bucket string
+	Provider string
+	Bucket   string
 }

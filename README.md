@@ -104,14 +104,30 @@ Configuration is done through environment variables
 | ARGON2_KEY_ROUNDS      | number         | ARGON2 KEY rounds / iterations param  | no       | 12      |
 | ARGON2_KEY_PARALLELISM | number         | ARGON2 KEY parallelism param          | no       | 16      |
 
-#### AWS S3 Config:
+#### S3 Config:
+
+| Name           | Type   | Description                             | Required |
+|----------------|--------|-----------------------------------------|----------|
+| S3_PROVIDER    | string | S3 Provider Name: `S3` (default) or `R2`| no       |
+| S3_BUCKET      | string | S3 Bucket Name                          | yes      |
+
+You only need one of these (as per your S3 Provider): 
+
+##### AWS S3 Config:
 
 | Name           | Type   | Description                        | Required |
 |----------------|--------|------------------------------------|----------|
 | AWS_ACCESS_KEY | string | AWS Programmatic Access Key / ID   | yes      |
 | AWS_SECRET_KEY | string | Associated Programmatic Secret Key | yes      |
 | AWS_REGION     | string | AWS Hosting Region                 | yes      |
-| AWS_S3_BUCKET  | string | S3 Bucket Name                     | yes      |
+
+##### CloudFlare R2 Config:
+
+| Name                                | Type   | Description                          | Required |
+|-------------------------------------|--------|--------------------------------------|----------|
+| CLOUDFLARE_ACCOUNT_ID               | string | Cloudflare Account ID                | yes      |
+| CLOUDFLARE_R2_ACCESS_KEY_ID         | string | Cloudflare R2 API Access Key         | yes      |
+| CLOUDFLARE_R2_ACCESS_KEY_SECRET     | string | Cloudflare R2 API Access Key  Secret | yes      |
 
 #### HTTP Server Config:
 

@@ -21,6 +21,8 @@ func Load() {
 	// App Defaults
 	viper.SetDefault("ENV", "dev")
 	viper.SetDefault("LOG_LEVEL", "debug")
+	// S3 Provider Default
+	viper.SetDefault("S3_PROVIDER", "S3")
 	// ARGON 2 Default Config
 	// Config for Generating ID:
 	// parallelism  memory  rounds  time
@@ -50,7 +52,8 @@ func Load() {
 			Overrides: make(map[string]string),
 		},
 		S3: S3{
-			Bucket: viper.GetString("AWS_S3_BUCKET"),
+			Bucket: viper.GetString("S3_BUCKET"),
+			Provider: viper.GetString("S3_PROVIDER"),
 		},
 		Crypto: Crypto{
 			Salt: []byte(viper.GetString("SALT")),
