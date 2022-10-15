@@ -19,16 +19,33 @@ func populateEncryptionStack(idSize int) {
 }
 
 func populateChan(idSize int, c chan types.EncryptionStack) {
+	ptr := -1
+	stacksArr := make([]types.EncryptionStack, 25)
+	stacksLen := len(stacksArr)
+	genetating := false
 	for {
-		mut.Lock()
-		x := types.EncryptionStack{
-			ID:   utils.GenerateID(idSize),
-			Salt: utils.GenSalt(),
+		if ptr >= 0 {
+			c <- stacksArr[ptr]
+			ptr++
 		}
-		id := []byte(x.ID)
-		x.Hash = hex.EncodeToString(utils.HashID(id))
-		x.Key = utils.GenKey(id, x.Salt[:])
-		mut.Unlock()
-		c <- x
+		if !genetating && (ptr >= stacksLen - 5 || ptr == -1) {
+			genetating = true
+			go func() {
+				for i := 0; i < stacksLen; i++ {
+					mut.Lock()
+					x := types.EncryptionStack{
+						ID:   utils.GenerateID(idSize),
+						Salt: utils.GenSalt(),
+					}
+					id := []byte(x.ID)
+					x.Hash = hex.EncodeToString(utils.HashID(id))
+					x.Key = utils.GenKey(id, x.Salt[:])
+					stacksArr[i] = x
+					mut.Unlock()
+				}
+				ptr = 0
+				genetating = false
+			}()
+		}
 	}
 }
