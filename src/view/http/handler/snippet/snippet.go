@@ -53,9 +53,9 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 
 		snippet := types.Snippet{
 			Data: data.Data,
-			Metadata: map[string]interface{}{
-				"ephemeral": data.Metadata.Ephemeral,
-				"language":  data.Metadata.Language,
+			Metadata: types.Metadata{
+				Ephemeral: data.Metadata.Ephemeral,
+				Language:  data.Metadata.Language,
 			},
 		}
 

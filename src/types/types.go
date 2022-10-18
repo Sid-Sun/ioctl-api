@@ -16,6 +16,12 @@ type SnippetSpec struct {
 }
 
 type Snippet struct {
-	Data     string                 `json:"data"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata Metadata `json:"metadata"`
+	Data     string   `json:"data"`
+}
+
+type Metadata struct {
+	Ephemeral bool   `json:"ephemeral"`
+	ID        string `json:"id"`
+	Language  string `json:"language"`
 }

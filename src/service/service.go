@@ -48,8 +48,11 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 		keys = <-encryptionKeys
 	}
 
-	snippet.Metadata["id"] = keys.ID
-	rawSnippet, _ := json.Marshal(snippet)
+	snippet.Metadata.ID = keys.ID
+	rawSnippet, err := json.Marshal(snippet)
+	if err != nil {
+		return "", err
+	}
 
 	// Deflate snippet -> Encrypt snippet -> encode snippet
 	compressedSnippet := utils.Defalte(rawSnippet)
