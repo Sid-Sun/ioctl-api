@@ -1,16 +1,16 @@
 package types
 
 type EncryptionStack struct {
-	ID   string
+	Salt *[32]byte
 	Key  []byte
 	Hash string
-	Salt *[32]byte
+	ID   string
 }
 
 type SnippetSpec struct {
+	Ephemeral  bool   `json:"ephemeral"`
 	Version    string `json:"version"`
 	Keysalt    string `json:"keysalt"`
-	Ephemeral  bool   `json:"ephemeral"`
 	Initvector string `json:"initvector"`
 	Ciphertext string `json:"ciphertext"`
 }
