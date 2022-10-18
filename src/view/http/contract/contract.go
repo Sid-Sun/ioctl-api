@@ -25,4 +25,3 @@ type Metadata struct {
 }
 
 var CS CreateSnippet
-

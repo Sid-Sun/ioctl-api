@@ -19,9 +19,8 @@ func main() {
 	config.Load()
 	utils.InitLogger(config.Cfg)
 
-
 	sp := storageprovider.InitS3StorageProvider()
-	
+
 	sc := model.NewMongoSnippetController(sp)
 	svc := service.NewSnippetService(sc, config.Cfg.Svc)
 

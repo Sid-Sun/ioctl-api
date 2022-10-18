@@ -2,9 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"compress/zlib"
 	"io/ioutil"
 	"strings"
-	"compress/zlib"
 
 	"github.com/leonklingele/passphrase"
 )

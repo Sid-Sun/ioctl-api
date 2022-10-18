@@ -129,7 +129,7 @@ func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	}
 
 	decryptedSnippet := utils.Decrypt(ciphertext, salt, iv, []byte(id))
-	
+
 	var snippet types.Snippet
 	if snippetSpec.Version == "v1" {
 		decompressedJSON := utils.Inflate(decryptedSnippet)

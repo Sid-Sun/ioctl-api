@@ -28,7 +28,7 @@ func populateChan(idSize int, c chan types.EncryptionStack) {
 			c <- stacksArr[ptr]
 			ptr++
 		}
-		if !genetating && (ptr >= stacksLen - 5 || ptr == -1) {
+		if !genetating && (ptr >= stacksLen-5 || ptr == -1) {
 			genetating = true
 			go func() {
 				for i := 0; i < stacksLen; i++ {
