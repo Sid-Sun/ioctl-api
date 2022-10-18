@@ -41,9 +41,9 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
 		}
 
-		raw, _ := json.Marshal(resp)
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(raw)
+		e := json.NewEncoder(w)
+		e.Encode(resp)
 	}
 }
 
@@ -70,9 +70,9 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
 		}
 
-		raw, _ := json.Marshal(resp)
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(raw)
+		e := json.NewEncoder(w)
+		e.Encode(resp)
 	}
 }
 
