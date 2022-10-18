@@ -94,13 +94,12 @@ func Get(svc service.Service, responseType string) http.HandlerFunc {
 		}
 
 		if responseType == "raw" {
-			x := new(types.Snippet)
-			json.Unmarshal(snippet.Snippet, &x)
-			w.Write([]byte(x.Data))
+			w.Write([]byte(snippet.Data))
 			return
 		}
 
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(snippet.Snippet)
+		e := json.NewEncoder(w)
+		e.Encode(snippet)
 	}
 }

@@ -1,7 +1,6 @@
 package service
 
 import (
-	// "encoding/base64"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
@@ -21,7 +20,7 @@ var ErrAlreadyExists = model.ErrAlreadyExists
 type Service interface {
 	CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error)
 	CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error
-	FetchSnippet(id string) (*model.Snippet, error)
+	FetchSnippet(id string) (*types.Snippet, error)
 }
 
 type serviceImpl struct {
@@ -49,16 +48,20 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 	}
 
 	snippet.Metadata.ID = keys.ID
+	// Snippet Spec v2
+	// Compress user Snippet isntead of entire object (more effective and cleaner) then B64 encode it
+	// Without B64, JSON Marshal produces a large output for non-text data due to encoding challanges (think: escapes)
+	// B64 overcomes this by avoiding these and thus JSOn is of a proportional length
+	snippet.Data = base64.RawURLEncoding.EncodeToString(utils.Defalte([]byte(snippet.Data)))
 	rawSnippet, err := json.Marshal(snippet)
 	if err != nil {
 		return "", err
 	}
 
-	// Deflate snippet -> Encrypt snippet -> encode snippet
-	compressedSnippet := utils.Defalte(rawSnippet)
-	encryptedSnippet, iv, keysalt := utils.Encrypt(compressedSnippet, keys.Key, keys.Salt)
+	// Encrypt snippet -> encode snippet
+	encryptedSnippet, iv, keysalt := utils.Encrypt(rawSnippet, keys.Key, keys.Salt)
 	snippetSpec := types.SnippetSpec{
-		Version:    "v1",
+		Version:    "v2",
 		Ephemeral:  ephemeral,
 		Ciphertext: base64.RawURLEncoding.EncodeToString(encryptedSnippet),
 		Initvector: base64.RawURLEncoding.EncodeToString(iv),
@@ -91,7 +94,7 @@ func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, eph 
 	return nil
 }
 
-func (s *serviceImpl) FetchSnippet(id string) (*model.Snippet, error) {
+func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	if s.overrides[id] != "" {
 		id = s.overrides[id]
 	}
@@ -126,10 +129,32 @@ func (s *serviceImpl) FetchSnippet(id string) (*model.Snippet, error) {
 	}
 
 	decryptedSnippet := utils.Decrypt(ciphertext, salt, iv, []byte(id))
-	snip.Snippet = utils.Inflate(decryptedSnippet)
+	
+	var snippet types.Snippet
+	if snippetSpec.Version == "v1" {
+		decompressedJSON := utils.Inflate(decryptedSnippet)
+		err = json.Unmarshal(decompressedJSON, &snippet)
+		if err != nil {
+			return nil, err
+		}
+		// This was not *always* set on v1 snippets, lets set it
+		snippet.Metadata.ID = id
+		return &snippet, nil
+	}
 
-	// Return generated ID instead of the stored hashed ID
-	snip.ID = id
+	// In v2 we only compress/decompress user data of json instead of complete JSON
+	// And B64 encode the user data post compression
+	err = json.Unmarshal(decryptedSnippet, &snippet)
+	if err != nil {
+		return nil, err
+	}
 
-	return snip, nil
+	decodedData, err := base64.RawURLEncoding.DecodeString(snippet.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	snippet.Data = string(utils.Inflate(decodedData))
+
+	return &snippet, nil
 }
