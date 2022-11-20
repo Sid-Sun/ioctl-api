@@ -74,7 +74,12 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 		return "", err
 	}
 
-	err = s.sc.NewSnippet(bytes.NewReader(data), keys.Hash, ephemeral)
+	// Srsly Golang, can we just have ternary?
+	st := types.EphemeralSnippet
+	if !ephemeral {
+		st = types.ProlongedSnippet
+	}
+	err = s.sc.NewSnippet(bytes.NewReader(data), keys.Hash, st)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewSnippet]", err))
 		return "", err
@@ -83,8 +88,12 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 	return keys.ID, nil
 }
 
-func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error {
-	err := s.sc.NewSnippet(snippet, snippetID, eph)
+func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, ephemeral bool) error {
+	st := types.EphemeralSnippet
+	if !ephemeral {
+		st = types.ProlongedSnippet
+	}
+	err := s.sc.NewSnippet(snippet, snippetID, st)
 	if err != nil {
 		if err != model.ErrAlreadyExists {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
@@ -100,7 +109,7 @@ func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	}
 	hashedID := utils.HashID([]byte(id))
 	encodedID := hex.EncodeToString(hashedID)
-	snip, err := s.sc.FindSnippet(encodedID, checkIfEphemeral(id))
+	snip, err := s.sc.FindSnippet(encodedID, checkNoteType(id))
 	if err != nil {
 		if err != model.ErrNotFound {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [FindSnippet]", err))
@@ -111,7 +120,7 @@ func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	snippetSpec := new(types.SnippetSpec)
 	err = json.Unmarshal(snip.Snippet, &snippetSpec)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal]", err))
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [SnippetSpec]", err))
 		return nil, err
 	}
 
@@ -135,6 +144,7 @@ func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 		decompressedJSON := utils.Inflate(decryptedSnippet)
 		err = json.Unmarshal(decompressedJSON, &snippet)
 		if err != nil {
+			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V1] [decryptedSnippet]", err))
 			return nil, err
 		}
 		// This was not *always* set on v1 snippets, lets set it
@@ -146,11 +156,13 @@ func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	// And B64 encode the user data post compression
 	err = json.Unmarshal(decryptedSnippet, &snippet)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V2] [decryptedSnippet]", err))
 		return nil, err
 	}
 
 	decodedData, err := base64.RawURLEncoding.DecodeString(snippet.Data)
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V2] [DecodeString]", err))
 		return nil, err
 	}
 

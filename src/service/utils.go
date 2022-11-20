@@ -1,15 +1,26 @@
 package service
 
 import (
-	"fmt"
 	"regexp"
+
+	"github.com/fitant/xbin-api/src/types"
 )
 
-func checkIfEphemeral(s string) bool {
-	x, _ := regexp.Compile("[A-Z]")
-	r := x.FindAllStringIndex(s, -1)
+var regex, _ = regexp.Compile("[A-Z]")
+
+func checkNoteType(s string) types.SnippetType {
+	r := regex.FindAllStringIndex(s, -1)
 	if r == nil {
-		fmt.Errorf("invalid ID")
+		return types.InvalidSnippet
 	}
-	return len(r) <= 2
+	lr := len(r)
+	switch lr {
+	case 1:
+		return types.StaticSnippet
+	case 2:
+		return types.EphemeralSnippet
+	case 3:
+		return types.ProlongedSnippet
+	}
+	return types.InvalidSnippet
 }

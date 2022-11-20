@@ -25,3 +25,12 @@ type Metadata struct {
 	ID        string `json:"id"`
 	Language  string `json:"language"`
 }
+
+type SnippetType int
+
+const (
+	StaticSnippet SnippetType = iota + 1
+	EphemeralSnippet
+	ProlongedSnippet
+	InvalidSnippet
+)
