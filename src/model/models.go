@@ -1,18 +1,21 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/fitant/xbin-api/src/storageprovider"
+	"github.com/fitant/xbin-api/src/types"
 )
 
 var ErrNotFound = storageprovider.ErrNotFound
 var ErrAlreadyExists = storageprovider.ErrAlreadyExists
+var ErrIncorrectSnippetType = errors.New("invalid snipppet type/id provided")
 
 type SnippetController interface {
-	NewSnippet(snippet io.Reader, id string, ephemeral bool) error
-	FindSnippet(name string, eph bool) (*Snippet, error)
+	NewSnippet(snippet io.Reader, id string, st types.SnippetType) error
+	FindSnippet(name string, st types.SnippetType) (*Snippet, error)
 }
 
 type Snippet struct {
@@ -30,9 +33,14 @@ func NewMongoSnippetController(sp *storageprovider.S3Provider) SnippetController
 	}
 }
 
-func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, ephemeral bool) error {
-	if ephemeral {
+func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, st types.SnippetType) error {
+	switch st {
+	case types.EphemeralSnippet:
 		id = fmt.Sprintf("ephemeral/%s", id)
+	case types.ProlongedSnippet:
+		id = fmt.Sprintf("prolonged/%s", id)
+	default: // creating static snippets is not supported
+		return ErrIncorrectSnippetType
 	}
 	err := msc.sp.UploadSnippet(snippet, id)
 	if err != nil {
@@ -41,9 +49,16 @@ func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, ephe
 	return nil
 }
 
-func (msc *mongoSnippetController) FindSnippet(id string, eph bool) (*Snippet, error) {
-	if eph {
+func (msc *mongoSnippetController) FindSnippet(id string, st types.SnippetType) (*Snippet, error) {
+	switch st {
+	case types.EphemeralSnippet:
 		id = fmt.Sprintf("ephemeral/%s", id)
+	case types.StaticSnippet:
+		id = fmt.Sprintf("static/%s", id)
+	case types.ProlongedSnippet:
+		id = fmt.Sprintf("prolonged/%s", id)
+	case types.InvalidSnippet:
+		return nil, ErrIncorrectSnippetType
 	}
 	data, err := msc.sp.DownloadSnippet(id)
 	if err != nil {

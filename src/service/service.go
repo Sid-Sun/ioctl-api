@@ -1,7 +1,6 @@
 package service
 
 import (
-	// "encoding/base64"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
@@ -21,7 +20,7 @@ var ErrAlreadyExists = model.ErrAlreadyExists
 type Service interface {
 	CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error)
 	CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error
-	FetchSnippet(id string) (*model.Snippet, error)
+	FetchSnippet(id string) (*types.Snippet, error)
 }
 
 type serviceImpl struct {
@@ -48,14 +47,21 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 		keys = <-encryptionKeys
 	}
 
-	snippet.Metadata["id"] = keys.ID
-	rawSnippet, _ := json.Marshal(snippet)
+	snippet.Metadata.ID = keys.ID
+	// Snippet Spec v2
+	// Compress user Snippet isntead of entire object (more effective and cleaner) then B64 encode it
+	// Without B64, JSON Marshal produces a large output for non-text data due to encoding challanges (think: escapes)
+	// B64 overcomes this by avoiding these and thus JSOn is of a proportional length
+	snippet.Data = base64.RawURLEncoding.EncodeToString(utils.Defalte([]byte(snippet.Data)))
+	rawSnippet, err := json.Marshal(snippet)
+	if err != nil {
+		return "", err
+	}
 
-	// Deflate snippet -> Encrypt snippet -> encode snippet
-	compressedSnippet := utils.Defalte(rawSnippet)
-	encryptedSnippet, iv, keysalt := utils.Encrypt(compressedSnippet, keys.Key, keys.Salt)
+	// Encrypt snippet -> encode snippet
+	encryptedSnippet, iv, keysalt := utils.Encrypt(rawSnippet, keys.Key, keys.Salt)
 	snippetSpec := types.SnippetSpec{
-		Version:    "v1",
+		Version:    "v2",
 		Ephemeral:  ephemeral,
 		Ciphertext: base64.RawURLEncoding.EncodeToString(encryptedSnippet),
 		Initvector: base64.RawURLEncoding.EncodeToString(iv),
@@ -68,7 +74,12 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 		return "", err
 	}
 
-	err = s.sc.NewSnippet(bytes.NewReader(data), keys.Hash, ephemeral)
+	// Srsly Golang, can we just have ternary?
+	st := types.EphemeralSnippet
+	if !ephemeral {
+		st = types.ProlongedSnippet
+	}
+	err = s.sc.NewSnippet(bytes.NewReader(data), keys.Hash, st)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewSnippet]", err))
 		return "", err
@@ -77,8 +88,12 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 	return keys.ID, nil
 }
 
-func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error {
-	err := s.sc.NewSnippet(snippet, snippetID, eph)
+func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, ephemeral bool) error {
+	st := types.EphemeralSnippet
+	if !ephemeral {
+		st = types.ProlongedSnippet
+	}
+	err := s.sc.NewSnippet(snippet, snippetID, st)
 	if err != nil {
 		if err != model.ErrAlreadyExists {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
@@ -88,13 +103,13 @@ func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, eph 
 	return nil
 }
 
-func (s *serviceImpl) FetchSnippet(id string) (*model.Snippet, error) {
+func (s *serviceImpl) FetchSnippet(id string) (*types.Snippet, error) {
 	if s.overrides[id] != "" {
 		id = s.overrides[id]
 	}
 	hashedID := utils.HashID([]byte(id))
 	encodedID := hex.EncodeToString(hashedID)
-	snip, err := s.sc.FindSnippet(encodedID, checkIfEphemeral(id))
+	snip, err := s.sc.FindSnippet(encodedID, checkNoteType(id))
 	if err != nil {
 		if err != model.ErrNotFound {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [FindSnippet]", err))
@@ -105,7 +120,7 @@ func (s *serviceImpl) FetchSnippet(id string) (*model.Snippet, error) {
 	snippetSpec := new(types.SnippetSpec)
 	err = json.Unmarshal(snip.Snippet, &snippetSpec)
 	if err != nil {
-		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal]", err))
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [SnippetSpec]", err))
 		return nil, err
 	}
 
@@ -123,10 +138,35 @@ func (s *serviceImpl) FetchSnippet(id string) (*model.Snippet, error) {
 	}
 
 	decryptedSnippet := utils.Decrypt(ciphertext, salt, iv, []byte(id))
-	snip.Snippet = utils.Inflate(decryptedSnippet)
 
-	// Return generated ID instead of the stored hashed ID
-	snip.ID = id
+	var snippet types.Snippet
+	if snippetSpec.Version == "v1" {
+		decompressedJSON := utils.Inflate(decryptedSnippet)
+		err = json.Unmarshal(decompressedJSON, &snippet)
+		if err != nil {
+			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V1] [decryptedSnippet]", err))
+			return nil, err
+		}
+		// This was not *always* set on v1 snippets, lets set it
+		snippet.Metadata.ID = id
+		return &snippet, nil
+	}
 
-	return snip, nil
+	// In v2 we only compress/decompress user data of json instead of complete JSON
+	// And B64 encode the user data post compression
+	err = json.Unmarshal(decryptedSnippet, &snippet)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V2] [decryptedSnippet]", err))
+		return nil, err
+	}
+
+	decodedData, err := base64.RawURLEncoding.DecodeString(snippet.Data)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [FetchSnippet] [Unmarshal] [V2] [DecodeString]", err))
+		return nil, err
+	}
+
+	snippet.Data = string(utils.Inflate(decodedData))
+
+	return &snippet, nil
 }

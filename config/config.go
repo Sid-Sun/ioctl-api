@@ -52,7 +52,7 @@ func Load() {
 			Overrides: make(map[string]string),
 		},
 		S3: S3{
-			Bucket: viper.GetString("S3_BUCKET"),
+			Bucket:   viper.GetString("S3_BUCKET"),
 			Provider: viper.GetString("S3_PROVIDER"),
 		},
 		Crypto: Crypto{

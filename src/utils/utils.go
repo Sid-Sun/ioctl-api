@@ -2,12 +2,16 @@ package utils
 
 import (
 	"bytes"
+	"compress/zlib"
 	"io/ioutil"
 	"strings"
-	"compress/zlib"
 
 	"github.com/leonklingele/passphrase"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+var titleCaser = cases.Title(language.English)
 
 func GenerateID(n int) string {
 	passphrase.Separator = "-"
@@ -15,7 +19,7 @@ func GenerateID(n int) string {
 
 	idFields := strings.Split(id, "-")
 	for i := range idFields {
-		idFields[i] = strings.Title(idFields[i])
+		idFields[i] = titleCaser.String(idFields[i])
 	}
 	return strings.Join(idFields, "")
 }

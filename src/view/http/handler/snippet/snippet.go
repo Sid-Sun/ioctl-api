@@ -41,9 +41,9 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
 		}
 
-		raw, _ := json.Marshal(resp)
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(raw)
+		e := json.NewEncoder(w)
+		e.Encode(resp)
 	}
 }
 
@@ -53,9 +53,9 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 
 		snippet := types.Snippet{
 			Data: data.Data,
-			Metadata: map[string]interface{}{
-				"ephemeral": data.Metadata.Ephemeral,
-				"language":  data.Metadata.Language,
+			Metadata: types.Metadata{
+				Ephemeral: data.Metadata.Ephemeral,
+				Language:  data.Metadata.Language,
 			},
 		}
 
@@ -70,9 +70,9 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
 		}
 
-		raw, _ := json.Marshal(resp)
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(raw)
+		e := json.NewEncoder(w)
+		e.Encode(resp)
 	}
 }
 
@@ -94,13 +94,12 @@ func Get(svc service.Service, responseType string) http.HandlerFunc {
 		}
 
 		if responseType == "raw" {
-			x := new(types.Snippet)
-			json.Unmarshal(snippet.Snippet, &x)
-			w.Write([]byte(x.Data))
+			w.Write([]byte(snippet.Data))
 			return
 		}
 
 		req.Header.Add("Content-Type", "application/json")
-		w.Write(snippet.Snippet)
+		e := json.NewEncoder(w)
+		e.Encode(snippet)
 	}
 }
