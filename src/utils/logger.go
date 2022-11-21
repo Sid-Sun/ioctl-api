@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/fitant/xbin-api/config"
+	"github.com/sid-sun/ioctl-api/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

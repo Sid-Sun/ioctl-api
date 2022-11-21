@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/model"
-	"github.com/fitant/xbin-api/src/service"
-	"github.com/fitant/xbin-api/src/storageprovider"
-	"github.com/fitant/xbin-api/src/utils"
-	"github.com/fitant/xbin-api/src/view"
-	"github.com/fitant/xbin-api/src/view/http"
+	"github.com/sid-sun/ioctl-api/config"
+	"github.com/sid-sun/ioctl-api/src/model"
+	"github.com/sid-sun/ioctl-api/src/service"
+	"github.com/sid-sun/ioctl-api/src/storageprovider"
+	"github.com/sid-sun/ioctl-api/src/utils"
+	"github.com/sid-sun/ioctl-api/src/view"
+	"github.com/sid-sun/ioctl-api/src/view/http"
 )
 
 func main() {

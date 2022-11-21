@@ -3,7 +3,7 @@ package service
 import (
 	"regexp"
 
-	"github.com/fitant/xbin-api/src/types"
+	"github.com/sid-sun/ioctl-api/src/types"
 )
 
 var regex, _ = regexp.Compile("[A-Z]")

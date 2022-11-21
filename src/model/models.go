@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fitant/xbin-api/src/storageprovider"
-	"github.com/fitant/xbin-api/src/types"
+	"github.com/sid-sun/ioctl-api/src/storageprovider"
+	"github.com/sid-sun/ioctl-api/src/types"
 )
 
 var ErrNotFound = storageprovider.ErrNotFound

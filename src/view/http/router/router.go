@@ -3,11 +3,11 @@ package router
 import (
 	"net/http"
 
-	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/service"
-	"github.com/fitant/xbin-api/src/view/http/handler/snippet"
-	"github.com/fitant/xbin-api/src/view/http/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/sid-sun/ioctl-api/config"
+	"github.com/sid-sun/ioctl-api/src/service"
+	"github.com/sid-sun/ioctl-api/src/view/http/handler/snippet"
+	"github.com/sid-sun/ioctl-api/src/view/http/middleware"
 )
 
 func New(svc service.Service, cfg *config.HTTPServerConfig) *chi.Mux {

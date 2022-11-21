@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
-	appconfig "github.com/fitant/xbin-api/config"
+	appconfig "github.com/sid-sun/ioctl-api/config"
 )
 
 type S3Provider struct {

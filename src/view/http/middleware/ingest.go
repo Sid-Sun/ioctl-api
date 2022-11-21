@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/fitant/xbin-api/src/view/http/contract"
+	"github.com/sid-sun/ioctl-api/src/view/http/contract"
 )
 
 func WithIngestion() func(h http.Handler) http.Handler {

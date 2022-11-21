@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/service"
-	"github.com/fitant/xbin-api/src/utils"
-	"github.com/fitant/xbin-api/src/view"
-	"github.com/fitant/xbin-api/src/view/http/router"
+	"github.com/sid-sun/ioctl-api/config"
+	"github.com/sid-sun/ioctl-api/src/service"
+	"github.com/sid-sun/ioctl-api/src/utils"
+	"github.com/sid-sun/ioctl-api/src/view"
+	"github.com/sid-sun/ioctl-api/src/view/http/router"
 )
 
 type webView struct {

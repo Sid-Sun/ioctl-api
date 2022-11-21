@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/service"
-	"github.com/fitant/xbin-api/src/types"
-	"github.com/fitant/xbin-api/src/view/http/contract"
 	"github.com/go-chi/chi/v5"
+	"github.com/sid-sun/ioctl-api/config"
+	"github.com/sid-sun/ioctl-api/src/service"
+	"github.com/sid-sun/ioctl-api/src/types"
+	"github.com/sid-sun/ioctl-api/src/view/http/contract"
 )
 
 func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc {

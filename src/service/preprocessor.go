@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"sync"
 
-	"github.com/fitant/xbin-api/src/types"
-	"github.com/fitant/xbin-api/src/utils"
+	"github.com/sid-sun/ioctl-api/src/types"
+	"github.com/sid-sun/ioctl-api/src/utils"
 )
 
 var encryptionKeysEphemeral chan types.EncryptionStack

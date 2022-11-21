@@ -6,7 +6,7 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/fitant/xbin-api/config"
+	"github.com/sid-sun/ioctl-api/config"
 	"golang.org/x/crypto/argon2"
 )
 

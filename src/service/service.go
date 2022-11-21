@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fitant/xbin-api/config"
-	"github.com/fitant/xbin-api/src/model"
-	"github.com/fitant/xbin-api/src/types"
-	"github.com/fitant/xbin-api/src/utils"
+	"github.com/sid-sun/ioctl-api/config"
+	"github.com/sid-sun/ioctl-api/src/model"
+	"github.com/sid-sun/ioctl-api/src/types"
+	"github.com/sid-sun/ioctl-api/src/utils"
 )
 
 var ErrNotFound = model.ErrNotFound

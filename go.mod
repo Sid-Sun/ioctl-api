@@ -1,6 +1,6 @@
-module github.com/fitant/xbin-api
+module github.com/sid-sun/ioctl-api
 
-go 1.17
+go 1.18
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.20

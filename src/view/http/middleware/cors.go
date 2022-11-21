@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fitant/xbin-api/config"
 	"github.com/rs/cors"
+	"github.com/sid-sun/ioctl-api/config"
 )
 
 func WithCors(cfg *config.HTTPServerConfig) func(h http.Handler) http.Handler {
