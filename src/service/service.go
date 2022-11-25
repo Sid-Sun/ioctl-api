@@ -5,8 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	"github.com/sid-sun/ioctl-api/config"
 	"github.com/sid-sun/ioctl-api/src/model"
@@ -93,7 +95,14 @@ func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, ephe
 	if !ephemeral {
 		st = types.ProlongedSnippet
 	}
-	err := s.sc.NewSnippet(snippet, snippetID, st)
+	d, err := ioutil.ReadAll(snippet)
+	if err != nil {
+		return err
+	}
+	if len(d) == 0 {
+		return errors.New("body cannot be empty")
+	}
+	err = s.sc.NewSnippet(bytes.NewReader(d), snippetID, st)
 	if err != nil {
 		if err != model.ErrAlreadyExists {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
