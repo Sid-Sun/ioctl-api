@@ -22,14 +22,14 @@ func populateChan(idSize int, c chan types.EncryptionStack) {
 	ptr := -1
 	stacksArr := make([]types.EncryptionStack, 25)
 	stacksLen := len(stacksArr)
-	genetating := false
+	generating := false
 	for {
 		if ptr >= 0 {
 			c <- stacksArr[ptr]
 			ptr++
 		}
-		if !genetating && (ptr >= stacksLen-5 || ptr == -1) {
-			genetating = true
+		if !generating && (ptr >= stacksLen-5 || ptr == -1) {
+			generating = true
 			go func() {
 				for i := 0; i < stacksLen; i++ {
 					mut.Lock()
@@ -44,7 +44,7 @@ func populateChan(idSize int, c chan types.EncryptionStack) {
 					mut.Unlock()
 				}
 				ptr = 0
-				genetating = false
+				generating = false
 			}()
 		}
 	}

@@ -10,8 +10,8 @@ type Config struct {
 	App    app
 	Svc    Service
 	Http   HTTPServerConfig
-	S3     S3
-	Crypto Crypto
+	S3     s3
+	Crypto crypto
 }
 
 var Cfg *Config
@@ -51,18 +51,18 @@ func Load() {
 		Svc: Service{
 			Overrides: make(map[string]string),
 		},
-		S3: S3{
+		S3: s3{
 			Bucket:   viper.GetString("S3_BUCKET"),
 			Provider: viper.GetString("S3_PROVIDER"),
 		},
-		Crypto: Crypto{
+		Crypto: crypto{
 			Salt: []byte(viper.GetString("SALT")),
-			ARGON2Key: ARGON2Config{
+			ARGON2Key: argon2Config{
 				Parallelism: uint8(viper.GetUint("ARGON2_KEY_PARALLELISM")),
 				Memory:      viper.GetUint32("ARGON2_KEY_MEMORY") * 1024,
 				Rounds:      viper.GetUint32("ARGON2_KEY_ROUNDS"),
 			},
-			ARGON2ID: ARGON2Config{
+			ARGON2ID: argon2Config{
 				Parallelism: uint8(viper.GetUint("ARGON2_ID_PARALLELISM")),
 				Memory:      viper.GetUint32("ARGON2_ID_MEMORY") * 1024,
 				Rounds:      viper.GetUint32("ARGON2_ID_ROUNDS"),
@@ -73,7 +73,7 @@ func Load() {
 			port:         viper.GetInt("HTTP_LISTEN_PORT"),
 			CORS:         viper.GetString("HTTP_CORS_LIST"),
 			baseURL:      viper.GetString("HTTP_BASE_URL"),
-			Enpoint:      viper.GetString("HTTP_API_ENDPOINT"),
+			Endpoint:     viper.GetString("HTTP_API_ENDPOINT"),
 			returnFormat: viper.GetString("HTTP_RETURN_FORMAT"),
 		},
 	}

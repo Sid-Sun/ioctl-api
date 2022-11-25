@@ -11,36 +11,36 @@ import (
 
 var ErrNotFound = storageprovider.ErrNotFound
 var ErrAlreadyExists = storageprovider.ErrAlreadyExists
-var ErrIncorrectSnippetType = errors.New("invalid snipppet type/id provided")
+var errIncorrectSnippetType = errors.New("invalid snipppet type/id provided")
 
 type SnippetController interface {
 	NewSnippet(snippet io.Reader, id string, st types.SnippetType) error
-	FindSnippet(name string, st types.SnippetType) (*Snippet, error)
+	FindSnippet(name string, st types.SnippetType) (*snippet, error)
 }
 
-type Snippet struct {
+type snippet struct {
 	ID      string
 	Snippet []byte
 }
 
-type mongoSnippetController struct {
+type s3SnippetController struct {
 	sp *storageprovider.S3Provider
 }
 
-func NewMongoSnippetController(sp *storageprovider.S3Provider) SnippetController {
-	return &mongoSnippetController{
+func NewS3SnippetController(sp *storageprovider.S3Provider) SnippetController {
+	return &s3SnippetController{
 		sp: sp,
 	}
 }
 
-func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, st types.SnippetType) error {
+func (msc *s3SnippetController) NewSnippet(snippet io.Reader, id string, st types.SnippetType) error {
 	switch st {
 	case types.EphemeralSnippet:
 		id = fmt.Sprintf("ephemeral/%s", id)
 	case types.ProlongedSnippet:
 		id = fmt.Sprintf("prolonged/%s", id)
 	default: // creating static snippets is not supported
-		return ErrIncorrectSnippetType
+		return errIncorrectSnippetType
 	}
 	err := msc.sp.UploadSnippet(snippet, id)
 	if err != nil {
@@ -49,7 +49,7 @@ func (msc *mongoSnippetController) NewSnippet(snippet io.Reader, id string, st t
 	return nil
 }
 
-func (msc *mongoSnippetController) FindSnippet(id string, st types.SnippetType) (*Snippet, error) {
+func (msc *s3SnippetController) FindSnippet(id string, st types.SnippetType) (*snippet, error) {
 	switch st {
 	case types.EphemeralSnippet:
 		id = fmt.Sprintf("ephemeral/%s", id)
@@ -58,7 +58,7 @@ func (msc *mongoSnippetController) FindSnippet(id string, st types.SnippetType) 
 	case types.ProlongedSnippet:
 		id = fmt.Sprintf("prolonged/%s", id)
 	case types.InvalidSnippet:
-		return nil, ErrIncorrectSnippetType
+		return nil, errIncorrectSnippetType
 	}
 	data, err := msc.sp.DownloadSnippet(id)
 	if err != nil {
@@ -66,7 +66,7 @@ func (msc *mongoSnippetController) FindSnippet(id string, st types.SnippetType) 
 	}
 
 	// Create new Snippet and return
-	return &Snippet{
+	return &snippet{
 		ID:      id,
 		Snippet: data,
 	}, nil

@@ -24,7 +24,7 @@ func GenerateID(n int) string {
 	return strings.Join(idFields, "")
 }
 
-func Defalte(data []byte) []byte {
+func Deflate(data []byte) []byte {
 	var b bytes.Buffer
 	w, err := zlib.NewWriterLevel(&b, 7)
 	if err != nil {

@@ -76,7 +76,6 @@ func Create(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc 
 	}
 }
 
-// TODO: REDO
 func Get(svc service.Service, responseType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		snippetID := chi.URLParam(req, "snippetID")

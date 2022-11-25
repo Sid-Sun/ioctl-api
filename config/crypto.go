@@ -1,12 +1,12 @@
 package config
 
-type Crypto struct {
+type crypto struct {
 	Salt      []byte
-	ARGON2Key ARGON2Config
-	ARGON2ID  ARGON2Config
+	ARGON2Key argon2Config
+	ARGON2ID  argon2Config
 }
 
-type ARGON2Config struct {
+type argon2Config struct {
 	Parallelism uint8
 	Memory      uint32
 	Rounds      uint32

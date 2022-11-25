@@ -15,7 +15,7 @@ func New(svc service.Service, cfg *config.HTTPServerConfig) *chi.Mux {
 
 	r.Use(middleware.WithCors(cfg))
 
-	r.Route(cfg.Enpoint, func(sr chi.Router) {
+	r.Route(cfg.Endpoint, func(sr chi.Router) {
 		sr.With(middleware.WithIngestion()).Put(
 			"/{file}", snippet.Create(svc, cfg))
 		sr.With(middleware.WithIngestion()).Put(
@@ -25,9 +25,7 @@ func New(svc service.Service, cfg *config.HTTPServerConfig) *chi.Mux {
 		sr.Post("/e2e/{snippetID}", snippet.CreateE2E(svc, cfg))
 		sr.Get("/r/{snippetID}", snippet.Get(svc, "raw"))
 		sr.Get("/{snippetID}", snippet.Get(svc, "json"))
-		sr.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			return
-		})
+		sr.Get("/", func(w http.ResponseWriter, r *http.Request) {})
 	})
 
 	return r

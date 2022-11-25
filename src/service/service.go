@@ -51,10 +51,10 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 
 	snippet.Metadata.ID = keys.ID
 	// Snippet Spec v2
-	// Compress user Snippet isntead of entire object (more effective and cleaner) then B64 encode it
-	// Without B64, JSON Marshal produces a large output for non-text data due to encoding challanges (think: escapes)
+	// Compress user Snippet instead of entire object (more effective and cleaner) then B64 encode it
+	// Without B64, JSON Marshal produces a large output for non-text data due to encoding challenges (think: escapes)
 	// B64 overcomes this by avoiding these and thus JSOn is of a proportional length
-	snippet.Data = base64.RawURLEncoding.EncodeToString(utils.Defalte([]byte(snippet.Data)))
+	snippet.Data = base64.RawURLEncoding.EncodeToString(utils.Deflate([]byte(snippet.Data)))
 	rawSnippet, err := json.Marshal(snippet)
 	if err != nil {
 		return "", err

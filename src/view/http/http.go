@@ -13,7 +13,7 @@ import (
 )
 
 type webView struct {
-	httpServer http.Server
+	httpServer *http.Server
 }
 
 func (w *webView) Serve() {
@@ -41,6 +41,6 @@ func Init(svc service.Service, cfg *config.HTTPServerConfig) view.View {
 	}
 
 	return &webView{
-		httpServer: *srv,
+		httpServer: srv,
 	}
 }

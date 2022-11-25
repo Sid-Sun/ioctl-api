@@ -28,9 +28,9 @@ func InitS3StorageProvider() *S3Provider {
 	// Dynamically Load config for S3 Provider
 	switch appconfig.Cfg.S3.Provider {
 	case "R2":
-		cfg = R2()
+		cfg = r2provider()
 	case "S3":
-		cfg = S3()
+		cfg = s3provider()
 		acl = types.ObjectCannedACLPublicRead
 	}
 
@@ -44,7 +44,7 @@ func InitS3StorageProvider() *S3Provider {
 }
 
 func (sp *S3Provider) UploadSnippet(data io.Reader, id string) error {
-	_, err := sp.GetObjectInfo(id)
+	_, err := sp.getObjectInfo(id)
 	if err != nil && err != ErrNotFound {
 		return err
 	}
@@ -68,7 +68,7 @@ func (sp *S3Provider) UploadSnippet(data io.Reader, id string) error {
 	return nil
 }
 
-func (sp *S3Provider) GetObjectInfo(id string) (*s3.HeadObjectOutput, error) {
+func (sp *S3Provider) getObjectInfo(id string) (*s3.HeadObjectOutput, error) {
 	objhead, err := sp.client.HeadObject(context.Background(), &s3.HeadObjectInput{
 		Bucket: &sp.bucketname,
 		Key:    &id,
@@ -93,7 +93,6 @@ func (sp *S3Provider) DownloadSnippet(id string) (data []byte, err error) {
 		Key:    &id,
 		Bucket: &sp.bucketname,
 	})
-	// TODO: Handle not found error
 	if err != nil {
 		var nsk *types.NoSuchKey
 		if errors.As(err, &nsk) {

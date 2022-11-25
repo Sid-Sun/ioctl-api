@@ -8,7 +8,7 @@ import (
 
 var Logger *zap.Logger
 
-var logLevels map[string]zapcore.Level = map[string]zapcore.Level{
+var logLevels = map[string]zapcore.Level{
 	"debug": zap.DebugLevel,
 	"info":  zap.InfoLevel,
 	"warn":  zap.WarnLevel,

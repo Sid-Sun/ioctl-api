@@ -21,7 +21,7 @@ func main() {
 
 	sp := storageprovider.InitS3StorageProvider()
 
-	sc := model.NewMongoSnippetController(sp)
+	sc := model.NewS3SnippetController(sp)
 	svc := service.NewSnippetService(sc, config.Cfg.Svc)
 
 	// Initialise and start serving webview
@@ -32,7 +32,7 @@ func main() {
 }
 
 func gracefulShutdown(views []view.View) {
-	// Listen for interrrupt
+	// Listen for interrupt
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
@@ -42,7 +42,7 @@ func gracefulShutdown(views []view.View) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	for _, view := range views {
-		go view.Shutdown(ctx)
+	for _, v := range views {
+		go v.Shutdown(ctx)
 	}
 }

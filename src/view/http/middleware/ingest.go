@@ -20,9 +20,7 @@ func WithIngestion() func(h http.Handler) http.Handler {
 				},
 			}
 
-			var source io.Reader
-			source = req.Body
-
+			var source io.Reader = req.Body
 			raw, _ := ioutil.ReadAll(source)
 
 			if len(raw) == 0 {

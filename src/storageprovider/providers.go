@@ -10,9 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
-type S3ConfigProvider func() aws.Config
-
-func R2() aws.Config {
+func r2provider() aws.Config {
 	r2Resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com", os.Getenv("CLOUDFLARE_ACCOUNT_ID")),
@@ -29,7 +27,7 @@ func R2() aws.Config {
 	return cfg
 }
 
-func S3() aws.Config {
+func s3provider() aws.Config {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		panic(err)

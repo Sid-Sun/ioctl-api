@@ -7,7 +7,7 @@ type HTTPServerConfig struct {
 	port         int
 	CORS         string
 	baseURL      string
-	Enpoint      string
+	Endpoint     string
 	returnFormat string
 }
 
@@ -16,7 +16,7 @@ func (h *HTTPServerConfig) GetListenAddr() string {
 }
 
 func (h *HTTPServerConfig) GetBaseURL() string {
-	if h.Enpoint == "/" {
+	if h.Endpoint == "/" {
 		switch h.returnFormat {
 		case "json":
 			return fmt.Sprintf("%s/%%s", h.baseURL)
@@ -25,7 +25,7 @@ func (h *HTTPServerConfig) GetBaseURL() string {
 	}
 	switch h.returnFormat {
 	case "json":
-		return fmt.Sprintf("%s%s/%%s", h.baseURL, h.Enpoint)
+		return fmt.Sprintf("%s%s/%%s", h.baseURL, h.Endpoint)
 	}
-	return fmt.Sprintf("%s%s/r/%%s", h.baseURL, h.Enpoint)
+	return fmt.Sprintf("%s%s/r/%%s", h.baseURL, h.Endpoint)
 }
