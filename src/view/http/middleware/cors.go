@@ -19,3 +19,12 @@ func WithCors(cfg *config.HTTPServerConfig) func(h http.Handler) http.Handler {
 
 	return handler
 }
+
+func WithMaxBodyReader(cfg *config.HTTPServerConfig) func(h http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			req.Body = http.MaxBytesReader(w, req.Body, cfg.MaxBodySize)
+			next.ServeHTTP(w, req)
+		})
+	}
+}

@@ -9,6 +9,7 @@ type HTTPServerConfig struct {
 	baseURL      string
 	Endpoint     string
 	returnFormat string
+	MaxBodySize  int64
 }
 
 func (h *HTTPServerConfig) GetListenAddr() string {

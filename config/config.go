@@ -43,6 +43,7 @@ func Load() {
 	viper.SetDefault("HTTP_RETURN_FORMAT", "raw")
 	viper.SetDefault("HTTP_API_ENDPOINT", "/snippets")
 	viper.SetDefault("HTTP_CORS_LIST", "http://localhost:*")
+	viper.SetDefault("HTTP_MAX_BODY_SIZE", 50*1000000) // 50
 	cfg := &Config{
 		App: app{
 			env: viper.GetString("ENV"),
@@ -69,12 +70,13 @@ func Load() {
 			},
 		},
 		Http: HTTPServerConfig{
-			host:         viper.GetString("HTTP_LISTEN_HOST"),
+			baseURL:      viper.GetString("HTTP_BASE_URL"),
 			port:         viper.GetInt("HTTP_LISTEN_PORT"),
 			CORS:         viper.GetString("HTTP_CORS_LIST"),
-			baseURL:      viper.GetString("HTTP_BASE_URL"),
+			host:         viper.GetString("HTTP_LISTEN_HOST"),
 			Endpoint:     viper.GetString("HTTP_API_ENDPOINT"),
 			returnFormat: viper.GetString("HTTP_RETURN_FORMAT"),
+			MaxBodySize:  viper.GetInt64("HTTP_MAX_BODY_SIZE") * 1000000,
 		},
 	}
 
