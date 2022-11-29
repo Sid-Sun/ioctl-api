@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -13,9 +14,16 @@ import (
 	"github.com/sid-sun/ioctl-api/src/view/http/contract"
 )
 
+var regex, _ = regexp.Compile("[0-9a-f]")
+
 func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		snippetID := chi.URLParam(req, "snippetID")
+		snippetHexUUID := chi.URLParam(req, "snippetHexUUID")
+		r := regex.FindAllStringIndex(snippetHexUUID, -1)
+		if r == nil || len(snippetHexUUID) != 64 && len(r) != 64 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("hex encoded snippet uuid invalid"))
+		}
 
 		ephHeader := req.Header.Get("Ephemeral")
 		eph, err := strconv.ParseBool(ephHeader)
@@ -25,7 +33,7 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 			return
 		}
 
-		err = svc.CreateE2ESnippet(req.Body, snippetID, eph)
+		err = svc.CreateE2ESnippet(req.Body, snippetHexUUID, eph)
 		if err != nil {
 			if err == service.ErrAlreadyExists {
 				w.WriteHeader(http.StatusConflict)
@@ -38,7 +46,7 @@ func CreateE2E(svc service.Service, cfg *config.HTTPServerConfig) http.HandlerFu
 		}
 
 		resp := contract.CreateSnippetResponse{
-			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetID),
+			URL: fmt.Sprintf(cfg.GetBaseURL(), snippetHexUUID),
 		}
 
 		req.Header.Add("Content-Type", "application/json")

@@ -11,14 +11,14 @@ import (
 
 var ErrNotFound = storageprovider.ErrNotFound
 var ErrAlreadyExists = storageprovider.ErrAlreadyExists
-var errIncorrectSnippetType = errors.New("invalid snipppet type/id provided")
+var ErrIncorrectSnippetType = errors.New("invalid snipppet type/id provided")
 
 type SnippetController interface {
-	NewSnippet(snippet io.Reader, id string, st types.SnippetType) error
-	FindSnippet(name string, st types.SnippetType) (*snippet, error)
+	NewSnippet(snippet io.Reader, hexuuid string, st types.SnippetType) error
+	FindSnippet(name string, st types.SnippetType) (*Snippet, error)
 }
 
-type snippet struct {
+type Snippet struct {
 	ID      string
 	Snippet []byte
 }
@@ -33,41 +33,41 @@ func NewS3SnippetController(sp *storageprovider.S3Provider) SnippetController {
 	}
 }
 
-func (msc *s3SnippetController) NewSnippet(snippet io.Reader, id string, st types.SnippetType) error {
+func (msc *s3SnippetController) NewSnippet(snippet io.Reader, hexuuid string, st types.SnippetType) error {
 	switch st {
 	case types.EphemeralSnippet:
-		id = fmt.Sprintf("ephemeral/%s", id)
+		hexuuid = fmt.Sprintf("ephemeral/%s", hexuuid)
 	case types.ProlongedSnippet:
-		id = fmt.Sprintf("prolonged/%s", id)
+		hexuuid = fmt.Sprintf("prolonged/%s", hexuuid)
 	default: // creating static snippets is not supported
-		return errIncorrectSnippetType
+		return ErrIncorrectSnippetType
 	}
-	err := msc.sp.UploadSnippet(snippet, id)
+	err := msc.sp.UploadSnippet(snippet, hexuuid)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (msc *s3SnippetController) FindSnippet(id string, st types.SnippetType) (*snippet, error) {
+func (msc *s3SnippetController) FindSnippet(hexuuid string, st types.SnippetType) (*Snippet, error) {
 	switch st {
 	case types.EphemeralSnippet:
-		id = fmt.Sprintf("ephemeral/%s", id)
+		hexuuid = fmt.Sprintf("ephemeral/%s", hexuuid)
 	case types.StaticSnippet:
-		id = fmt.Sprintf("static/%s", id)
+		hexuuid = fmt.Sprintf("static/%s", hexuuid)
 	case types.ProlongedSnippet:
-		id = fmt.Sprintf("prolonged/%s", id)
+		hexuuid = fmt.Sprintf("prolonged/%s", hexuuid)
 	case types.InvalidSnippet:
-		return nil, errIncorrectSnippetType
+		return nil, ErrIncorrectSnippetType
 	}
-	data, err := msc.sp.DownloadSnippet(id)
+	data, err := msc.sp.DownloadSnippet(hexuuid)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create new Snippet and return
-	return &snippet{
-		ID:      id,
+	return &Snippet{
+		ID:      hexuuid,
 		Snippet: data,
 	}, nil
 }

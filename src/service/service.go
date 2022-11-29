@@ -21,7 +21,7 @@ var ErrAlreadyExists = model.ErrAlreadyExists
 
 type Service interface {
 	CreateSnippet(snippet types.Snippet, ephemeral bool) (string, error)
-	CreateE2ESnippet(snippet io.Reader, snippetID string, eph bool) error
+	CreateE2ESnippet(snippet io.Reader, snippetHexUUID string, eph bool) error
 	FetchSnippet(id string) (*types.Snippet, error)
 }
 
@@ -90,7 +90,7 @@ func (s *serviceImpl) CreateSnippet(snippet types.Snippet, ephemeral bool) (stri
 	return keys.ID, nil
 }
 
-func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, ephemeral bool) error {
+func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetHexUUID string, ephemeral bool) error {
 	st := types.EphemeralSnippet
 	if !ephemeral {
 		st = types.ProlongedSnippet
@@ -102,7 +102,7 @@ func (s *serviceImpl) CreateE2ESnippet(snippet io.Reader, snippetID string, ephe
 	if len(d) == 0 {
 		return errors.New("body cannot be empty")
 	}
-	err = s.sc.NewSnippet(bytes.NewReader(d), snippetID, st)
+	err = s.sc.NewSnippet(bytes.NewReader(d), snippetHexUUID, st)
 	if err != nil {
 		if err != model.ErrAlreadyExists {
 			utils.Logger.Error(fmt.Sprintf("%s : %v", "[Service] [CreateSnippet] [NewE2ESnippet]", err))
